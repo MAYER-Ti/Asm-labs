@@ -21,10 +21,10 @@ start:
     mov ds, ax
     mov es, ax
 
-    ; ===== Прямая адресация =====
+    ; ===== Непосредственная адресация =====
     call rdtsc_start                         ; засечь начало измерения времени
     
-    mov ax, [value]                            
+    mov ax, 12                            
     
     call rdtsc_end                           ; засечь конец измерения времени
     lea dx, msg1

@@ -6,17 +6,16 @@
     value DW 15                             
     timer_start DW ?                       
     timer_end DW ?                          
-    msg1 DB 'Direct Addressing Time: ', '$'
-    msg2 DB 'Register Addressing Time: ', '$'
-    msg3 DB 'InDirect register addressing Time: ', '$'
-    msg4 DB 'Base Addressing Time: ', '$'
-    msg5 DB 'Base index Addressing Time: ', '$'
-    msg6 DB 'Base index Addressing Time with offset: ', '$'
+    msg1 DB 'mov ax, 12 : ', '$'
+    msg2 DB 'mov ax, bx : ', '$'
+    msg3 DB 'mov ax, [bx] : ', '$'
+    msg4 DB 'mov ax, [bx+2] : ', '$'
+    msg5 DB 'mov ax, [bx+si] : ', '$'
+    msg6 DB 'mov ax, [bx+si+2] : ', '$'
     newline DB 0Dh, 0Ah, '$'
 
 .code
 start:
-    ; ????????? ?????????
     mov ax, @data
     mov ds, ax
     mov es, ax
@@ -51,7 +50,7 @@ start:
     mov ax, [bx] 
                                   
     call rdtsc_end
-    lea dx, msg2
+    lea dx, msg3
     call print_string
     call print_time
     call print_newline
@@ -63,7 +62,7 @@ start:
     mov ax, [bx+2]
     
     call rdtsc_end
-    lea dx, msg3
+    lea dx, msg4
     call print_string
     call print_time
     call print_newline
@@ -76,7 +75,7 @@ start:
     mov ax, [bx+si]
     
     call rdtsc_end
-    lea dx, msg3
+    lea dx, msg5
     call print_string
     call print_time
     call print_newline
@@ -89,7 +88,7 @@ start:
     mov ax, [bx+si+2]
     
     call rdtsc_end
-    lea dx, msg3
+    lea dx, msg6
     call print_string
     call print_time
     call print_newline
@@ -125,7 +124,6 @@ print_string:
 
 ; ===== Напечатать число =====
 print_number:
-    ; ?????????????? ????? ? ?????? ? ?????
     mov bx, 0                               ; счетчик цифр
     mov cx, 10                               ; делитель
 convert_loop:

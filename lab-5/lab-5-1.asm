@@ -1,5 +1,4 @@
 .model	small
-.386
 .stack	100h
 .data
     a DW 1234h, 5678h       ; Исходные данные (low, high)
@@ -59,9 +58,6 @@ LogicalShiftLeftStack proc
     mov cx, [bp+4]      ; количество сдвигов
     mov si, [bp+6]      ; адрес a
     mov di, [bp+8]      ; адрес b_stack
-    
-    xor ax, ax
-    xor dx, dx
 
     ; выполнение сдвига
     mov ax, [si]        ; Младшие два байта(слово) a
@@ -85,8 +81,9 @@ LogicalShiftLeftRegs proc
     mov ax, [si]        ; младшие два байта(слово) a
     mov dx, [si+2]      ; старшие два байта(слово) a
 
-    shld dx, ax, cl     ; Сдвинуть старшее слово 
-    shl ax, cl          ; Сдвинуть младшее слово
+    push cx
+    call ShiftLeftManual
+    pop cx          ; Сдвинуть младшее слово
 
     ; Сохранение результата
     mov [di], ax        ; записать младшее слово в b

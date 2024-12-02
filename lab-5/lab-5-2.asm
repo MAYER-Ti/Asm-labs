@@ -1,7 +1,14 @@
-.model small
+.model  small
 .stack 100h
 
 .data
+
+    ; 
+    num1_low  dw 5677h ; младшее слово первого числа
+    num1_high dw 1234h ; старшее слово первого числа
+    num2_low  dw 5676h ; младшее слово второго числа
+    num2_high dw 1234h ; старшее слово второго числа
+    
     msg_equal db 'Numbers are equal', 0Dh, 0Ah, '$'
     msg_greater db 'First number is greater', 0Dh, 0Ah, '$'
     msg_less db 'Second number is greater', 0Dh, 0Ah, '$'
@@ -11,13 +18,46 @@
 start:
     ; запись сегмента пам€ти
     mov ax, @data
-    mov ds, ax
+    mov ds, ax 
 
+    ; ==== ѕередача через глобальные переменные ====
+    call CompareGlobals
+    
+    ; проверка полученных флагов после сравнени€
+    je NumbersEqualGlobals       ; равны
+    jg FirstIsGreaterGlobals     ; больше
+    jl SecondIsGreaterGlobals    ; меньше
+    
+NumbersEqualGlobals:
+    lea dx, msg_equal
+    jmp PrintGlobals
+FirstIsGreaterGlobals:
+    lea dx, msg_greater
+    jmp PrintGlobals
+SecondIsGreaterGlobals:
+    lea dx, msg_less
+PrintGlobals:
+    ; вывод сообщени€
+    mov ah, 09h
+    int 21h
+    
+    
+    ; ==== ѕередача через регистры ====
+    mov ax, num1_low
+    mov bx, num1_high
+    mov cx, num2_low
+    mov dx, num2_high
+    
+    call CompareUsingRegisters
+    
+
+    ; ==== ѕередача через стек ====
     ; запись двух чисел long long (по два слова)
     push word ptr 1234h ; старшее слово первого числа
     push word ptr 5676h ; младшее слово первого числа
+    
     push word ptr 1234h ; старшее слово второго числа
-    push word ptr 5677h ; младшее слово второго числа
+    push word ptr 5676h ; младшее слово второго числа
 
     ; вызов подпрограммы сравнени€
     call CompareLongs
@@ -29,17 +69,43 @@ start:
 
 NumbersEqual:
     lea dx, msg_equal
-    jmp Display
+    jmp Print
 FirstIsGreater:
     lea dx, msg_greater
-    jmp Display
+    jmp Print
 SecondIsGreater:
     lea dx, msg_less
-Display:
+Print:
     ; вывод сообщени€
     mov ah, 09h
     int 21h
     
+
+    mov ax, num1_low
+    mov bx, num1_high
+    mov cx, num2_low
+    mov dx, num2_high
+    call CompareUsingRegisters
+
+    
+    je NumbersEqualReg
+    jg FirstIsGreaterReg
+    jl SecondIsGreaterReg
+
+NumbersEqualReg:
+    lea dx, msg_equal
+    jmp PrintReg
+FirstIsGreaterReg:
+    lea dx, msg_greater
+    jmp PrintReg
+SecondIsGreaterReg:
+    lea dx, msg_less
+
+PrintReg:
+    mov ah, 09h
+    int 21h
+    
+        
     ; завершение программы
     mov ah, 4Ch
     int 21h
@@ -61,6 +127,10 @@ CompareLongs proc
     push dx
     push bx
     push cx
+    
+    push ds
+    mov ax, @data
+    mov ds, ax
 
     ; извлечение чисел из стека
     mov ax, [bp+4]       ; младшее слово второго числа
@@ -87,5 +157,38 @@ CompareEnd:
     leave ; ”далить текущий стековый кадр              
     ret 8               ; удал€ем параметры из стека (4 слова по 2 байта)
 CompareLongs endp       ; адреса размером два байта (слово), параметры - адреса
+
+
+; === ѕодпрограмма передачи значений через глобальные переменные  ===
+CompareGlobals PROC
+    enter 0, 0
+    mov ax, num1_high
+    cmp ax, num2_high
+    jne CompareEndGlobals
+
+    mov ax, num1_low
+    cmp ax, num2_low
+CompareEndGlobals:
+    leave
+    ret
+CompareGlobals ENDP
+
+; === ѕодпрограмма сравнени€ через регистры ===
+; AX Ч младшее слово первого числа
+; BX Ч старшее слово первого числа
+; CX Ч младшее слово второго числа
+; DX Ч старшее слово второго числа
+CompareUsingRegisters PROC
+    enter 0, 0
+    ; —равнение старших слов
+    cmp bx, dx
+    jne CompareEndRegisters
+
+    ; —равнение младших слов
+    cmp ax, cx
+CompareEndRegisters:
+    leave
+    ret
+CompareUsingRegisters ENDP
 
 end start

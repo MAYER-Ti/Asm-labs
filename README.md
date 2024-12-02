@@ -1,1 +1,1 @@
-# Лабораторные работы по TASM windows xp x16 
+# Лабораторные работы по TASM Windows XP x16 

@@ -1,0 +1,283 @@
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+    ; Глобальные сообщения
+    enter_prompt db 'Введите фамилию: $'
+    msg_nom db 'Есть ', 0           ; Именительный падеж
+    msg_gen db 'Нет ', 0            ; Родительный падеж
+    msg_dat db 'Дать ', 0           ; Дательный падеж
+    msg_acc db 'Вижу ', 0           ; Винительный падеж
+    msg_inst db 'С ', 0             ; Творительный падеж
+    msg_prep db 'О ', 0             ; Предложный падеж
+    newline db 0Dh, 0Ah, '$'
+
+    ; Буферы для работы
+    buffer db 30 dup(0)             ; Буфер для ввода фамилии
+    output_buffer db 50 dup(0)      ; Буфер для вывода результата
+
+.CODE
+.286
+
+; === Макросы ===
+; Макрос для вывода строки
+PRINT MACRO msg
+    lea dx, msg
+    mov ah, 09h
+    int 21h
+ENDM
+
+; Макрос для ввода строки
+INPUT MACRO buf
+    lea dx, buf
+    mov ah, 0Ah
+    int 21h
+ENDM
+
+; Макрос для копирования строки
+COPY_STRING MACRO source, dest
+    push si
+    push di
+    lea si, source
+    lea di, dest
+COPY_LOOP:
+    lodsb                  ; Читаем байт из исходного
+    cmp al, 0              ; Конец строки?
+    je COPY_END
+    stosb                  ; Записываем байт в приемник
+    jmp COPY_LOOP
+COPY_END:
+    pop di
+    pop si
+ENDM
+
+; Макрос для копирования введенной строки
+COPY_INPUT MACRO source, dest
+    push si
+    push di
+    lea si, source
+    lea di, dest
+INPUT_LOOP:
+    lodsb                  ; Читаем байт из входного буфера
+    cmp al, 0Dh            ; Конец строки?
+    je INPUT_END
+    stosb                  ; Записываем байт в приемник
+    jmp INPUT_LOOP
+INPUT_END:
+    pop di
+    pop si
+ENDM
+
+; === Процедуры ===
+; Добавление фамилии в родительном падеже
+AppendInputRod PROC
+    push si
+    push di
+NextInputCharRod:
+    mov al, [si]
+    cmp al, 0Dh          ; Конец строки?
+    je ProcessEnding
+    mov [di], al         ; Копируем фамилию
+    inc si
+    inc di
+    jmp NextInputCharRod
+
+ProcessEnding:
+    ; Проверяем окончания
+    dec di
+    dec si
+    mov al, [si]
+    cmp al, 'н'
+    je ReplaceIn
+    cmp al, 'в'
+    je ReplaceOv
+    cmp al, 'й'
+    je ReplaceIy
+    jmp EndAppendInputRod
+
+ReplaceIn:
+    dec si
+    mov al, [si]
+    cmp al, 'ы'
+    je AddYna
+    jmp EndAppendInputRod
+
+AddYna:
+    mov al, 'ы'
+    stosb
+    mov al, 'н'
+    stosb
+    mov al, 'а'
+    stosb
+    jmp EndAppendInputRod
+
+ReplaceOv:
+    dec si
+    mov al, [si]
+    cmp al, 'о'
+    je AddOva
+    jmp EndAppendInputRod
+
+AddOva:
+    mov al, 'о'
+    stosb
+    mov al, 'в'
+    stosb
+    mov al, 'а'
+    stosb
+    jmp EndAppendInputRod
+
+ReplaceIy:
+    mov al, 'я'
+    stosb
+    jmp EndAppendInputRod
+
+EndAppendInputRod:
+    pop di
+    pop si
+    ret
+AppendInputRod ENDP
+
+; Добавление фамилии с окончанием
+AppendInputWithSuffix PROC
+    push si
+    push di
+NextInputCharSuffix:
+    mov al, [si]
+    cmp al, 0Dh          ; Конец строки?
+    je ProcessSuffix
+    mov [di], al         ; Копируем фамилию
+    inc si
+    inc di
+    jmp NextInputCharSuffix
+
+ProcessSuffix:
+    dec di
+    dec si
+    mov al, [si]
+    cmp al, 'н'
+    je AddSuffixIn
+    cmp al, 'в'
+    je AddSuffixOv
+    cmp al, 'й'
+    je AddSuffixIy
+    jmp EndAppendInputWithSuffix
+
+AddSuffixIn:
+    dec si
+    mov al, [si]
+    cmp al, 'ы'
+    je AddSuffixYnu
+    jmp EndAppendInputWithSuffix
+
+AddSuffixYnu:
+    mov al, 'ы'
+    stosb
+    mov al, 'н'
+    stosb
+    mov al, 'у'
+    stosb
+    jmp EndAppendInputWithSuffix
+
+AddSuffixOv:
+    dec si
+    mov al, [si]
+    cmp al, 'о'
+    je AddSuffixOvu
+    jmp EndAppendInputWithSuffix
+
+AddSuffixOvu:
+    mov al, 'о'
+    stosb
+    mov al, 'в'
+    stosb
+    mov al, 'у'
+    stosb
+    jmp EndAppendInputWithSuffix
+
+AddSuffixIy:
+    mov al, 'ю'
+    stosb
+    jmp EndAppendInputWithSuffix
+
+EndAppendInputWithSuffix:
+    pop di
+    pop si
+    ret
+AppendInputWithSuffix ENDP
+
+; Сборка строки
+BuildOutput PROC
+    lea si, buffer+1      ; Пропускаем длину строки
+    lea di, output_buffer ; Готовим буфер для вывода
+    COPY_STRING bx, di    ; Добавляем сообщение
+    COPY_INPUT buffer+1, di ; Добавляем фамилию
+    mov al, 0
+    stosb
+    ret
+BuildOutput ENDP
+
+BuildOutputWithRod PROC
+    lea si, buffer+1
+    lea di, output_buffer
+    COPY_STRING bx, di    ; Добавляем сообщение
+    call AppendInputRod   ; Добавляем фамилию с окончанием
+    mov al, 0
+    stosb
+    ret
+BuildOutputWithRod ENDP
+
+BuildOutputWithSuffix PROC
+    lea si, buffer+1
+    lea di, output_buffer
+    COPY_STRING bx, di    ; Добавляем сообщение
+    call AppendInputWithSuffix ; Добавляем фамилию с окончанием
+    mov al, 0
+    stosb
+    ret
+BuildOutputWithSuffix ENDP
+
+; Основной цикл программы
+ProcessPadezhes PROC
+    lea bx, msg_nom
+    call BuildOutput
+    PRINT output_buffer
+    PRINT newline
+
+    lea bx, msg_gen
+    call BuildOutputWithRod
+    PRINT output_buffer
+    PRINT newline
+
+    lea bx, msg_dat
+    call BuildOutputWithSuffix
+    PRINT output_buffer
+    PRINT newline
+
+    lea bx, msg_acc
+    call BuildOutputWithRod
+    PRINT output_buffer
+    PRINT newline
+
+    lea bx, msg_inst
+    call BuildOutputWithSuffix
+    PRINT output_buffer
+    PRINT newline
+
+    lea bx, msg_prep
+    call BuildOutputWithSuffix
+    PRINT output_buffer
+    PRINT newline
+
+    ret
+ProcessPadezhes ENDP
+
+start:
+    mov ax, @data
+    mov ds, ax
+    PRINT enter_prompt
+    INPUT buffer
+    call ProcessPadezhes
+    mov ah, 4Ch
+    int 21h
+END start

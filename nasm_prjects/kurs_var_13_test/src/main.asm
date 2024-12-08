@@ -42,25 +42,25 @@ section .text
 _start:
 
 
-    ; ввод фамилии
-    mPrintString input_msg
-    mInputString buffer, 100
-    mTrimString buffer
-    mPrintString buffer
-    mPrintString newline
+;    ; ввод фамилии
+;    mPrintString input_msg
+;    mInputString buffer, 100
+;    mTrimString buffer
+;    mPrintString buffer
+;    mPrintString newline
 ;    
 ;
 ;     
-    ; Вывод в иминительном падеже 
-    mPrintString nominative_msg
-    mDeclineLastname buffer, output_buffer, 1
-    mPrintString output_buffer
-    mPrintString newline
-    mZeroArray output_buffer, 100
+;    ; Вывод в иминительном падеже 
+;    mPrintString nominative_msg
+;    mDeclineLastname buffer, output_buffer, 1
+;    mPrintString output_buffer
+;    mPrintString newline
+;    mZeroArray output_buffer, 100
 ;   
-    ; Вывод в родительном падеже 
-    mPrintString roditive_msg
-    mDeclineLastname buffer, output_buffer, 2
+;    ; Вывод в родительном падеже 
+;    mPrintString roditive_msg
+;    mDeclineLastname buffer, output_buffer, 2
 ;    mPrintString output_buffer
 ;    mPrintString newline
 

@@ -1,29 +1,70 @@
-%macro DECLINE_INSTRUMENTAL 2
-    mov rsi, %1          ; Адрес исходной строки
-    mov rdi, %2          ; Адрес буфера результата
-    call copy_string      ; Копируем строку
+%macro mDeclineTvoritive 2
 
-    sub rdi, 1           ; Указатель на последний символ
-    cmp byte [rdi], 'й'
-    je %%replace_y_with_em
-    cmp byte [rdi], 'е'
-    je %%replace_y_with_em
-    cmp byte [rdi - 1], 'о'
-    je %%append_om
-    cmp byte [rdi - 1], 'е'
-    je %%append_om
-    cmp byte [rdi - 1], 'и'
-    je %%append_om
+    mCopyString %1, %2
+
+    mStringLength %2 ; посчитать кол-во байт в строке до \0 записать в rbx
+    sub rbx, 2 ; встать на последюю букву
+    
+    mov rsi, %2
+    ; Последняя буква
+    ; [rsi + rax]
+    ; Предпоследняя буква
+    ; push word [rsi + rax - 2]
+     
+    ; последние два символа ый/ий/ой
+    cmp dword [rsi + rbx - 2], 'ый'
+    je %%replace_im
+    cmp dword [rsi + rbx - 2], 'ий'
+    je %%replace_im
+    cmp dword [rsi + rbx - 2], 'ой'
+    je %%replace_im
+    
+    ;последний символ а/я
+    cmp word [rsi + rbx], 'а'
+    je %%replace_oi
+    cmp word [rsi + rbx], 'я'
+    je %%replace_ei
+
+    ; последние два символа ов/ев/ин/ын
+    cmp dword [rsi + rbx - 2], 'ов' 
+    je %%append_iim
+    cmp dword [rsi + rbx - 2], 'ев' 
+    je %%append_iim
+    cmp dword [rsi + rbx - 2], 'ин' 
+    je %%append_iim
+    cmp dword [rsi + rbx - 2], 'ын' 
+    je %%append_iim
     jmp %%done
 
-%%replace_y_with_em:
-    mov word [rdi - 1], 'ем'
+%%replace_iim:
+    ;  
+    mov dword [rsi + rbx - 2], 'ым'
+    mov word [rsi + rbx + 2], 0
     jmp %%done
 
-%%append_om:
-    inc rdi
-    mov word [rdi], 'ом'
-    mov byte [rdi + 2], 0
+%%append_iim:
+    mov dword [rsi + rbx + 2], 'ым'
+    mov word [rsi + rbx + 6], 0
+    jmp %%done
+
+%%replace_oi:
+    mov dword [rsi + rbx], 'ой'
+    mov word [rsi + rbx + 4], 0
+    jmp %%done
+
+%%replace_ei:
+    mov dword [rsi + rbx], 'ей'
+    mov word [rsi + rbx + 4], 0
+    jmp %%done
+
+%%replace_im:
+    mov dword [rsi + rbx - 2], 'им'
+    mov word [rsi + rbx + 2], 0
+    jmp %%done
+
+%%append_a:
+    mov word [rsi + rbx + 2], 'а'    
+    mov word [rsi + rbx + 4], 0     
 %%done:
 %endmacro
 

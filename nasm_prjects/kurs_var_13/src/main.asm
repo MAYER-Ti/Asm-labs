@@ -2,22 +2,19 @@
 %include "src/decline_lastname_macro.asm"
 
 section .data
-    ; Глобальные сообщения
     input_msg db "Введите фамилию: ", 0
-    nominative_msg db "Именительный: ", 0
-    roditive_msg db "Родительный: ", 0
-    dative_msg db "Дательный: ", 0
-    vinitive_msg db "Винительный: ", 0
-    tvoritive_msg db "Творительный: ", 0
-    predlositive_msg db "Предложный: ", 0
+    nominative_msg db "Именительный(Кто? Что?): ", 0
+    roditive_msg db "Родительный(Кого? Чего?): ", 0
+    dative_msg db "Дательный(Кому? Чему?): ", 0
+    vinitive_msg db "Винительный(Кого? Что?): ", 0
+    tvoritive_msg db "Творительный(Кем? Чем?): ", 0
+    predlositive_msg db "Предложный(О Ком? О Чем?): ", 0
     newline db 0xA, 0
     err_msg db "Неверный падеж", 0
-
 
     ; Буферы для работы
     buffer times 100 dw 0; Буфер для ввода фамилии
     output_buffer times 100 dw 0   ; Буфер для вывода результата
-    char db 'A'
 
 section .text
     global _start
@@ -41,52 +38,54 @@ section .text
 
 _start:
 
-
     ; ввод фамилии
     mPrintString input_msg
     mInputString buffer, 100
     mTrimString buffer
     mPrintString buffer
     mPrintString newline
-;    
-;
-;     
+     
     ; Вывод в иминительном падеже 
-    mPrintString nominative_msg
-    mDeclineLastname buffer, output_buffer, 1
+    mPrintString nominative_msg                 ; Вывод строки падежа
+    mDeclineLastname buffer, output_buffer, 1   ; Склонение фамилии
+    mPrintString output_buffer                  ; вывод фамилии
+    mPrintString newline                        ; Переход на новую строку 
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии
+   
+    ; Вывод в родительном падеже 
+    mPrintString roditive_msg                   ; Вывод строки падежа
+    mDeclineLastname buffer, output_buffer, 2   ; Склонение фамилии
+    mPrintString output_buffer                  ; вывод фамилии
+    mPrintString newline                        ; Переход на новую строку
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии
+
+    ; Вывод в дательном падеже 
+    mPrintString dative_msg                     ; Вывод строки падежа
+    mDeclineLastname buffer, output_buffer, 3   ; Склонение фамилии
+    mPrintString output_buffer                  ; вывод фамилии
+    mPrintString newline                        ; Переход на новую строку
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии
+
+    ; Вывод в винительном падеже 
+    mPrintString vinitive_msg                   ; Вывод строки падежа
+    mDeclineLastname buffer, output_buffer, 4   ; Склонение фамилии
+    mPrintString output_buffer                  ; вывод фамилии
+    mPrintString newline                        ; Переход на новую строку
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии
+
+    ; Вывод в творительном падеже 
+    mPrintString tvoritive_msg                  ; Вывод строки падежа
+    mDeclineLastname buffer, output_buffer, 5   ; Склонение фамилии
+    mPrintString output_buffer                  ; вывод фамилии
+    mPrintString newline                        ; Переход на новую строку
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии; Занулить буфер фамилии
+
+    ; Вывод в предложном падеже 
+    mPrintString predlositive_msg
+    mDeclineLastname buffer, output_buffer, 6
     mPrintString output_buffer
     mPrintString newline
-    mZeroArray output_buffer, 100
-;   
-    ; Вывод в родительном падеже 
-    mPrintString roditive_msg
-    mDeclineLastname buffer, output_buffer, 2
-;    mPrintString output_buffer
-;    mPrintString newline
+    mZeroArray output_buffer, 100               ; Занулить буфер фамилии; Занулить буфер фамилии
 
-;    ; Вывод в дательном падеже 
-;    mPrintString dative_msg
-;    mDeclineLastname buffer, output_buffer, 3
-;    mPrintString output_buffer
-;    mPrintString newline
-;
-;    ; Вывод в винительном падеже 
-;    mPrintString vinitive_msg
-;    mDeclineLastname buffer, output_buffer, 4
-;    mPrintString output_buffer
-;    mPrintString newline
-;
-;    ; Вывод в творительном падеже 
-;    mPrintString tvoritive_msg
-;    mDeclineLastname buffer, output_buffer, 5
-;    mPrintString output_buffer
-;    mPrintString newline
-;
-;    ; Вывод в предложном падеже 
-;    mPrintString predlositive_msg
-;    mDeclineLastname buffer, output_buffer, 6
-;    mPrintString output_buffer
-;    mPrintString newline
-;
     ; Завершение программы
     EndProgram

@@ -34,59 +34,28 @@
 %endmacro
 
 %macro mStringLength 1
-    push cx
+    push rax
     mov rsi, %1         ; Адрес строки
-    xor rcx, rcx        ; Обнуляем счетчик длины
+    xor rbx, rbx        ; Обнуляем счетчик длины
 %%count_loop:
     lodsb               ; Загружаем текущий байт из строки
     test al, al         ; Проверяем, не конец строки ли это
     jz %%done            ; Если нашли конец строки, завершаем
-    inc rcx             ; Увеличиваем счетчик
+    inc rbx             ; Увеличиваем счетчик
     jmp %%count_loop     ; Продолжаем цикл
 %%done:
-    mov rax, rcx 
-    pop cx
+    pop rax
 %endmacro
 
-%macro count_letters 1
-    ; %1 - адрес строки
-    mov rsi, %1              ; Указатель на начало строки
-    xor rax, rax             ; Счётчик букв = 0
-%%count_loop:
-    cmp word [rsi], 0        ; Проверяем конец строки
-    je %%done
-
-    ; Проверяем символ: кириллица (А-Я, а-я, включая ё/Ё)
-    movzx rdx, word [rsi]    ; Загружаем текущий символ
-    cmp rdx, 0x0410          ; Если меньше 'А'
-    jb %%not_letter           ; Пропустить
-    cmp rdx, 0x044F          ; Если больше 'я'
-    jbe %%is_letter           ; Это кириллическая буква
-    cmp rdx, 0x0401          ; Проверяем 'Ё'
-    je %%is_letter            ; Это буква
-    cmp rdx, 0x0451          ; Проверяем 'ё'
-    je %%is_letter            ; Это буква
-
-%%not_letter:
-    ; Проверяем символ: латиница (A-Z, a-z)
-    cmp rdx, 0x0041          ; Если меньше 'A'
-    jb %%next                 ; Пропустить
-    cmp rdx, 0x005A          ; Если больше 'Z'
-    jbe %%is_letter           ; Это латинская буква
-
-    cmp rdx, 0x0061          ; Если меньше 'a'
-    jb %%next                 ; Пропустить
-    cmp rdx, 0x007A          ; Если больше 'z'
-    ja %%next                 ; Пропустить
-
-%%is_letter:
-    inc rax                  ; Это буква, увеличиваем счётчик
-
-%%next:
-    add rsi, 2               ; Переходим к следующему символу (2 байта)
-    jmp %%count_loop
-
-%%done:
+%macro mCopyString 2
+    mov rsi, %1         ; Адрес исходной строки (откуда)
+    mov rdi, %2         ; Адрес целевой строки (куда)
+%%copy_loop:
+    lodsb               ; Загружаем байт из исходной строки
+    stosb               ; Сохраняем байт в целевую строку
+    test al, al         ; Проверяем, не нулевой ли байт (конец строки)
+    jnz %%copy_loop      ; Если не конец строки, продолжаем копирование
+    mov byte [rdi], 0
 %endmacro
 
 %macro mInputString 2

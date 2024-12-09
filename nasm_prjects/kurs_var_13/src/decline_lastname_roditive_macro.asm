@@ -1,75 +1,61 @@
-%macro DECLINE_GENITIVE 2
-
-
+%macro mDeclineRoditive 2
 
     mCopyString %1, %2
-;
-;    mPrintString %2 
 
-
-    mStringLength %2 ; посчитать кол-во байт в строке до \0 записать в rax
-    sub rax, 2 ; встать на последюю букву
-  ;  count_letters %2
-;   rax - кол-во букв
+    mStringLength %2 ; посчитать кол-во байт в строке до \0 записать в rbx
+    sub rbx, 2 ; встать на последюю букву
     
     mov rsi, %2
-    ;add rax, '30h'
     ; Последняя буква
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  push word [rsi + rax]
+    ; [rsi + rax]
     ; Предпоследняя буква
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; push word [rsi + rax - 2]
-;    add rsi, rax
-   ; mov rsi, rsp
-  ;  add rsi, rax
-  ;  sub rsi, 2
-;
-;    mov rax, 1 
-;    mov rdi, 1 
-;    mov rdx, 4
-;    syscall 
-;;    
+    ; push word [rsi + rax - 2]
+     
+    ; последние два символа ый/ий/ой
+    cmp dword [rsi + rbx - 2], 'ый'
+    je %%replace_on_ogo
+    cmp dword [rsi + rbx - 2], 'ий'
+    je %%replace_on_ogo
+    cmp dword [rsi + rbx - 2], 'ой'
+    je %%replace_on_ogo
+    
+    ;последний символ а/я
+    cmp word [rsi + rbx], 'а'
+    je %%replace_on_ii
+    cmp word [rsi + rbx], 'я'
+    je %%replace_on_i
 
-;     
-;    ; Применяем правила для UTF-8
-;    sub rdi, 2           ; Указатель на последний символ (слово UTF-8)
-;    ; Проверяем последний символ на 'й' (UTF-8: D0 B9)
-    mov ax, word [rsi + rax]
-    cmp ax, 0xB9D0       ; Проверка на 'й'
-    je %%replace_y_with_ya
-;
-
-    ; Проверяем последний символ на 'е' (UTF-8: D0 B5)
-    cmp ax, 0xB5D0       ; Проверка на 'е'
-    je %%replace_y_with_ya
-;
-;    ; Проверяем предпоследний символ для добавления 'а'
-;    sub rdi, 2           ; Переходим к предпоследнему символу
-    mPrintChar char 
-    mov ax, word [rsi + rax - 2]
-    mPrintChar char 
-    cmp ax, 0xBED0       ; 'о' (UTF-8: D0 BE)
+    ; последние два символа ов/ев/ин/ын
+    cmp dword [rsi + rbx - 2], 'ов' 
     je %%append_a
-    cmp ax, 0xB5D0       ; 'е' (UTF-8: D0 B5)
+    cmp dword [rsi + rbx - 2], 'ев' 
     je %%append_a
-    cmp ax, 0xB8D0       ; 'и' (UTF-8: D0 B8)
+    cmp dword [rsi + rbx - 2], 'ин' 
+    je %%append_a
+    cmp dword [rsi + rbx - 2], 'ын' 
     je %%append_a
     jmp %%done
-;
-%%replace_y_with_ya:
-    ; Меняем последний символ на 'я' (UTF-8: D1 8F)
-    mov word [rsi + rax], word 0x8FD1
+
+%%replace_on_ogo:
+    ;  
+    mov dword [rsi + rbx - 2], 'ог'
+    mov word [rsi + rbx - 2 + 4], 'о'
+    mov word [rsi + rbx + 4], 0
     jmp %%done
-;
-;%%buffer_overflow_error:
-;    mCopyString err_msg, %2
-;    ret
-;
-;
+
+%%replace_on_ii:
+    mov word [rsi + rbx], 'ы'
+    mov word [rsi + rbx + 2], 0
+    jmp %%done
+
+%%replace_on_i:
+    mov word [rsi + rbx], 'и'
+    mov word [rsi + rbx + 2], 0
+    jmp %%done
+
 %%append_a:
-    mPrintChar char
-    ; Добавляем 'а' (UTF-8: D0 B0)
-    mov word [rsi + rax + 2], 0xB0D0    ; Первый байт UTF-8 для 'а'
-    mov word [rsi + rax + 4], 0      ; Завершающий нуль
+    mov word [rsi + rbx + 2], 'а'    
+    mov word [rsi + rbx + 4], 0     
 %%done: 
 %endmacro
 

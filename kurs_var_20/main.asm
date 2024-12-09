@@ -1,0 +1,36 @@
+.model  small
+.stack  100h
+
+.data
+   open_err_msg db 'Error opening file!$'
+   read_err_msg db 'Error reading file!$'
+   input_msg DB "Print order rows: ", 0Dh, 0Ah,'$'
+   fileName db 'data', '$'           ; ??? ????? (ASCIIZ)
+   fileHandle dw ?                     ; ?????????? ?????
+  
+   bufferChar db 00h              ; ????? ??? ???????
+   bufferRows dw 100 dup(00h)
+   ;;bytesRead dw 0                      ; ?????????? ??????????? ????
+
+.code
+
+include macro.inc
+
+
+
+start:
+
+   mov ax, @data
+   mov ds, ax
+   mov es, ax
+
+
+   mReadFile fileName, fileHandle, bufferRows
+   mPrintString input_msg
+
+
+
+
+   mov ah, 4ch
+   int 21h
+end start
